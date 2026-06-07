@@ -1,0 +1,3 @@
+# Place your Colab-built index here:
+# - Chroma SQLite files (entire rbi_chroma_db_v3 folder)
+# - bm25_index.pkl

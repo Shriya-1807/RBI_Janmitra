@@ -1,0 +1,6 @@
+node_modules/
+.venv/
+venv/
+ENV/
+*.zip
+rag-service/data/rbi_chroma_db_v3/git rm -r --cached .

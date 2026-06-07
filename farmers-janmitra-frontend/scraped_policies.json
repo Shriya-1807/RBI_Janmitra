@@ -1,0 +1,92 @@
+[
+  {
+    "title": "Priority Sector Lending (PSL)",
+    "date": "2026-01-22",
+    "category": "Lending",
+    "affectedGroup": "general",
+    "summary": "Priority Sector Lending (PSL) eligibility of loans outstanding as on April 1, 2025 shall be determined with reference to the provisions of the Master Directions on Priority Sector Lending 2025.",
+    "content": "Priority Sector Lending (PSL) eligibility of loans outstanding as on April 1, 2025 shall be determined with reference to the provisions of the Master Directions on Priority Sector Lending 2025.",
+    "circularNumber": null,
+    "impactLevel": "medium"
+  },
+  {
+    "title": "Financial Inclusion",
+    "date": "2021-10-21",
+    "category": "Customer Protection",
+    "affectedGroup": "general",
+    "summary": "This policy aims to promote financial inclusion by allowing FFMCs to do business and providing guidelines for money changing activities.",
+    "content": "The Reserve Bank of India has issued guidelines for money changing activities, including the categories of authorisation/licence granted under Section 10(1) of FEMA 1999. The objective behind allowing FFMCs to do business is to promote financial inclusion. A licence is mandatory for carrying out money changing business, and the application for an FFMC licence can be submitted to the designated authority.",
+    "circularNumber": null,
+    "impactLevel": "low"
+  },
+  {
+    "title": "Automated Data Flow",
+    "date": "2011-09-27",
+    "category": "Lending",
+    "affectedGroup": "general",
+    "summary": "The Reserve Bank of India has advised banks to implement Automated Data Flow (ADF) and provided an approach paper describing its goals and objectives.",
+    "content": "The Reserve Bank of India has placed on its website an Approach Paper describing the goals and objectives of Automated Data Flow (ADF) and advised the banks to implement Automated Data Flow. The approach paper can be accessed through the link Home >> Press Releases >>",
+    "circularNumber": null,
+    "impactLevel": "low"
+  },
+  {
+    "title": "Recovery Agents",
+    "date": "2017-11-23",
+    "category": "Customer Protection",
+    "affectedGroup": "general",
+    "summary": "The facility of non-competitive bidding in Dated Government Securities and Treasury Bills auctions has been introduced to encourage retail participation in the primary market for Government Securities.",
+    "content": "To encourage retail participation in the primary market for Government Securities, the facility of non-competitive bidding in Dated Government Securities and Treasury Bills auctions has been introduced. This will enable the investor to purchase a specified number of securities at the weighted average rate of the accepted competitive bids.",
+    "circularNumber": null,
+    "impactLevel": "low"
+  },
+  {
+    "title": "Master Direction on Priority Sector Lending 2023",
+    "date": "2026-05-30",
+    "category": "Lending",
+    "affectedGroup": "farmer",
+    "summary": "RBI updated directions outlining the target limits for agricultural, microfinance, and education loans under priority sector lending classification.",
+    "content": "RBI updated directions outlining the target limits for agricultural, microfinance, and education loans under priority sector lending classification.",
+    "circularNumber": null,
+    "impactLevel": "high"
+  },
+  {
+    "title": "Kisan Credit Card Revised Guidelines",
+    "date": "2026-05-30",
+    "category": "Lending",
+    "affectedGroup": "farmer",
+    "summary": "Simplified credit limits, interest subventions, and insurance covers for crops.",
+    "content": "Revised operational guidelines for KCC, detailing simplified credit limits, interest subventions, and insurance covers for crops.",
+    "circularNumber": null,
+    "impactLevel": "high"
+  },
+  {
+    "title": "Interest Subvention Scheme for Farmers",
+    "date": "2026-05-30",
+    "category": "Lending",
+    "affectedGroup": "farmer",
+    "summary": "Interest subventions of 2% and prompt repayment incentives of 3% on short-term crop loans up to 3 Lakh INR.",
+    "content": "Detailing interest subventions of 2% and prompt repayment incentives of 3% on short-term crop loans up to 3 Lakh INR.",
+    "circularNumber": null,
+    "impactLevel": "medium"
+  },
+  {
+    "title": "Agricultural Loans Rescheduling and NPA Guidelines",
+    "date": "2026-05-30",
+    "category": "Lending",
+    "affectedGroup": "farmer",
+    "summary": "Guidelines for rescheduling agri-loans in natural calamity hit areas, allowing up to 1-2 years moratorium and interest restructuring.",
+    "content": "Guidelines for rescheduling agri-loans in natural calamity hit areas, allowing up to 1-2 years moratorium and interest restructuring.",
+    "circularNumber": null,
+    "impactLevel": "high"
+  },
+  {
+    "title": "Integrated Ombudsman Scheme 2021",
+    "date": "2026-05-30",
+    "category": "Customer Protection",
+    "affectedGroup": "general",
+    "summary": "A single window portal for registering grievances against scheduled banks, NBFCs, and payment system participants.",
+    "content": "The single window portal for registering grievances against scheduled banks, NBFCs, and payment system participants.",
+    "circularNumber": null,
+    "impactLevel": "medium"
+  }
+]
