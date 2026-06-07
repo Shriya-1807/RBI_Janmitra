@@ -3,4 +3,7 @@ node_modules/
 venv/
 ENV/
 *.zip
-rag-service/data/rbi_chroma_db_v3/git rm -r --cached .
+rag-service/data/rbi_chroma_db_v3/git 
+.env
+*.loggit rm -r --cached .
+.pnpm-store/
