@@ -12,7 +12,7 @@ interface UserPreferencesContextType {
 const defaultPreferences = {
   sessionId: crypto.randomUUID(),
   language: ChatMessageRequestLanguage.english,
-  userType: ChatMessageRequestUserType.general,
+  userType: ChatMessageRequestUserType.farmer,
 };
 
 const UserPreferencesContext = createContext<UserPreferencesContextType | undefined>(undefined);
@@ -22,7 +22,11 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     const saved = localStorage.getItem("janmitra-preferences");
     if (saved) {
       try {
-        return { ...defaultPreferences, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        if (parsed.userType && !["farmer", "msme"].includes(parsed.userType)) {
+          parsed.userType = ChatMessageRequestUserType.farmer;
+        }
+        return { ...defaultPreferences, ...parsed };
       } catch (e) {
         // ignore
       }
@@ -37,7 +41,16 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
   const value = {
     ...preferences,
     setLanguage: (language: ChatMessageRequestLanguage) => setPreferences((p: any) => ({ ...p, language })),
-    setUserType: (userType: ChatMessageRequestUserType) => setPreferences((p: any) => ({ ...p, userType })),
+    setUserType: (userType: ChatMessageRequestUserType) => setPreferences((p: any) => {
+      if (p.userType !== userType) {
+        return {
+          ...p,
+          userType,
+          sessionId: crypto.randomUUID(),
+        };
+      }
+      return p;
+    }),
   };
 
   return <UserPreferencesContext.Provider value={value}>{children}</UserPreferencesContext.Provider>;

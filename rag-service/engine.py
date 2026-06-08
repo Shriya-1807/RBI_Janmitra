@@ -10,6 +10,7 @@ import os
 import pickle
 import re
 import time
+from pathlib import Path
 from typing import Any
 
 import chromadb
@@ -32,6 +33,15 @@ from config import (
     GEMINI_MODEL,
     RERANK_MODEL,
     USER_TYPE_CONTEXT,
+    CHROMA_MSME_PATH,
+    BM25_MSME_PATH,
+    COLLECTION_MSME_NAME,
+    GROK_API_KEY,
+    GROK_MODEL,
+    GROK_BASE_URL,
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    GROQ_BASE_URL,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,22 +81,27 @@ def rrf(rankings: list[list[int]], k: int = 60) -> list[int]:
 
 
 class RagEngine:
-    def __init__(self) -> None:
-        if not CHROMA_PATH.is_dir():
+    def __init__(
+        self,
+        chroma_path: Path = CHROMA_PATH,
+        bm25_path: Path = BM25_PATH,
+        collection_name: str = COLLECTION_NAME,
+    ) -> None:
+        if not chroma_path.is_dir():
             raise FileNotFoundError(
-                f"Chroma database not found at {CHROMA_PATH}. "
-                "Copy rbi_chroma_db_v3 from Google Drive (Colab notebook output) into rag-service/data/rbi_chroma_db_v3/"
+                f"Chroma database not found at {chroma_path}. "
+                "Ensure the Chroma DB folder has been copied to the data/ directory."
             )
-        if not BM25_PATH.is_file():
+        if not bm25_path.is_file():
             raise FileNotFoundError(
-                f"BM25 index not found at {BM25_PATH}. "
-                "Ensure bm25_index.pkl is inside the same folder as the Chroma DB."
+                f"BM25 index not found at {bm25_path}. "
+                "Ensure bm25_index.pkl is inside the database folder."
             )
-        if not GEMINI_API_KEY:
-            raise EnvironmentError("GEMINI_API_KEY environment variable is required.")
+        if not GEMINI_API_KEY and not GROQ_API_KEY and not GROK_API_KEY:
+            raise EnvironmentError("At least one LLM API key (GEMINI_API_KEY, GROQ_API_KEY, or GROK_API_KEY) must be configured.")
 
         self._device = _resolve_device()
-        logger.info("RAG device: %s", self._device)
+        logger.info("RAG device for %s: %s", collection_name, self._device)
 
         chromadb.api.ClientAPI.clear_system_cache()
 
@@ -97,27 +112,30 @@ class RagEngine:
         )
 
         client = chromadb.PersistentClient(
-            path=str(CHROMA_PATH),
+            path=str(chroma_path),
             settings=Settings(anonymized_telemetry=False, allow_reset=True),
         )
         self._vector_db = Chroma(
             client=client,
-            collection_name=COLLECTION_NAME,
+            collection_name=collection_name,
             embedding_function=self._embedder,
         )
 
-        with open(BM25_PATH, "rb") as f:
+        with open(bm25_path, "rb") as f:
             self._bm25_index, self._corpus_texts, self._corpus_meta = pickle.load(f)
 
-        logger.info("Loaded %d corpus chunks", len(self._corpus_texts))
+        logger.info("Loaded %d corpus chunks for %s", len(self._corpus_texts), collection_name)
 
         self._reranker = CrossEncoder(
             RERANK_MODEL, max_length=512, device=self._device
         )
-        self._gemini = genai.Client(
-            api_key=GEMINI_API_KEY,
-            http_options={"api_version": "v1beta"},
-        )
+        if GEMINI_API_KEY:
+            self._gemini = genai.Client(
+                api_key=GEMINI_API_KEY,
+                http_options={"api_version": "v1beta"},
+            )
+        else:
+            self._gemini = None
 
     def retrieve(self, query: str, verbose: bool = False) -> list[dict[str, Any]]:
         t0 = time.time()
@@ -177,19 +195,88 @@ class RagEngine:
             f"QUESTION: {query}\nANSWER:"
         )
 
+        # If GROQ_API_KEY is configured, route via Groq API
+        if GROQ_API_KEY:
+            try:
+                import requests
+                headers = {
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": GROQ_MODEL,
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": f"USER PROFILE: {profile}\n\n=== CONTEXT BLOCKS ===\n{context}\n=== END OF CONTEXT ===\n\nQUESTION: {query}"}
+                    ],
+                    "temperature": 0.0
+                }
+                res = requests.post(f"{GROQ_BASE_URL}/chat/completions", headers=headers, json=payload, timeout=90)
+                res.raise_for_status()
+                response = res.json()["choices"][0]["message"]["content"].strip()
+                return response, results
+            except Exception as e:
+                resp_text = res.text if 'res' in locals() else ''
+                logger.error("Groq API call failed: %s - Response: %s", e, resp_text)
+
+        # If GROK_API_KEY is configured and this is an MSME request, route via x.ai API
+        if user_type == "msme" and GROK_API_KEY:
+            try:
+                import requests
+                headers = {
+                    "Authorization": f"Bearer {GROK_API_KEY}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": GROK_MODEL,
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": f"USER PROFILE: {profile}\n\n=== CONTEXT BLOCKS ===\n{context}\n=== END OF CONTEXT ===\n\nQUESTION: {query}"}
+                    ],
+                    "temperature": 0.0
+                }
+                res = requests.post(f"{GROK_BASE_URL}/chat/completions", headers=headers, json=payload, timeout=90)
+                res.raise_for_status()
+                response = res.json()["choices"][0]["message"]["content"].strip()
+                return response, results
+            except Exception as e:
+                logger.error("Grok API call failed: %s", e)
+
+        if not self._gemini:
+            raise EnvironmentError("Gemini client is not initialized because GEMINI_API_KEY is missing, and no other active API key successfully answered.")
+
         response = (
             self._gemini.models.generate_content(model=GEMINI_MODEL, contents=prompt)
             .text.strip()
         )
         return response, results
 
-
-def get_engine() -> RagEngine:
-    global _engine
-    if _engine is None:
-        _engine = RagEngine()
-    return _engine
+_farmers_engine: RagEngine | None = None
+_msme_engine: RagEngine | None = None
 
 
-def is_ready() -> bool:
-    return CHROMA_PATH.is_dir() and BM25_PATH.is_file() and bool(GEMINI_API_KEY)
+def get_engine(user_type: str = "general") -> RagEngine:
+    global _farmers_engine, _msme_engine
+    if user_type == "msme":
+        if _msme_engine is None:
+            _msme_engine = RagEngine(
+                chroma_path=CHROMA_MSME_PATH,
+                bm25_path=BM25_MSME_PATH,
+                collection_name=COLLECTION_MSME_NAME,
+            )
+        return _msme_engine
+    else:
+        if _farmers_engine is None:
+            _farmers_engine = RagEngine(
+                chroma_path=CHROMA_PATH,
+                bm25_path=BM25_PATH,
+                collection_name=COLLECTION_NAME,
+            )
+        return _farmers_engine
+
+
+def is_ready(user_type: str = "general") -> bool:
+    has_api_key = bool(GEMINI_API_KEY) or bool(GROK_API_KEY) or bool(GROQ_API_KEY)
+    if user_type == "msme":
+        return CHROMA_MSME_PATH.is_dir() and BM25_MSME_PATH.is_file() and has_api_key
+    return CHROMA_PATH.is_dir() and BM25_PATH.is_file() and (bool(GEMINI_API_KEY) or bool(GROQ_API_KEY))

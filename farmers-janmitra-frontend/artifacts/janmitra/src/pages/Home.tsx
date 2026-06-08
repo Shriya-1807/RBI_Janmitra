@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useUserPreferences } from "@/lib/store";
 import { getTranslation } from "@/lib/translations";
 import { ChatMessageRequestLanguage } from "@workspace/api-client-react";
+import PageIconGuide from "@/components/PageIconGuide";
 import {
   ShieldAlert, BookOpen, MessageSquare,
   ArrowRight, Languages, Mic, Users, TrendingUp,
@@ -193,7 +194,7 @@ export default function Home() {
                 <Link href="/settings">
                   <Button size="lg" variant="outline" className="border-white/20 text-white bg-white/5 hover:bg-white/15 font-medium gap-2 text-base h-13 px-8">
                     <Users className="w-5 h-5" />
-                    {t("hero.exploreBtn")}
+                    {t("settings.userProfileTitle")}
                   </Button>
                 </Link>
               </div>
@@ -254,6 +255,13 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Page Icon Guide Bar */}
+        <section className="px-6 py-2">
+          <div className="max-w-7xl mx-auto">
+            <PageIconGuide page="home" />
+          </div>
+        </section>
+
         {/* ── Stats Bar ── */}
         {/* ── Who It Helps ── */}
         <section className="py-20 px-6 bg-muted/40">
@@ -264,7 +272,7 @@ export default function Home() {
               <p className="text-muted-foreground max-w-xl mx-auto">{t("profiles.desc")}</p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {[
                 {
                   title: t("profiles.farmer.title"),
@@ -276,15 +284,6 @@ export default function Home() {
                   desc: t("profiles.farmer.desc")
                 },
                 {
-                  title: t("profiles.student.title"),
-                  subtitle: t("profiles.student.sub"),
-                  Icon: BookOpen,
-                  color: "bg-blue-50 border-blue-200",
-                  iconBg: "bg-[hsl(224,65%,28%)]",
-                  textColor: "text-[hsl(224,65%,28%)]",
-                  desc: t("profiles.student.desc")
-                },
-                {
                   title: t("profiles.msme.title"),
                   subtitle: t("profiles.msme.sub"),
                   Icon: TrendingUp,
@@ -292,15 +291,6 @@ export default function Home() {
                   iconBg: "bg-[#FF9933]",
                   textColor: "text-[#e88800]",
                   desc: t("profiles.msme.desc")
-                },
-                {
-                  title: t("profiles.salaried.title"),
-                  subtitle: t("profiles.salaried.sub"),
-                  Icon: BadgeCheck,
-                  color: "bg-purple-50 border-purple-200",
-                  iconBg: "bg-purple-600",
-                  textColor: "text-purple-700",
-                  desc: t("profiles.salaried.desc")
                 },
               ].map((card) => (
                 <div key={card.title} className={`p-6 rounded-2xl border card-glow cursor-default transition-all ${card.color}`}>
@@ -318,58 +308,70 @@ export default function Home() {
 
         {/* ── Core Features ── */}
         <section className="py-20 px-6 bg-background">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto border-b pb-16">
             <div className="text-center mb-14">
               <p className="text-sm font-semibold tracking-widest uppercase text-[#FF9933] mb-3">{t("features.subtitle")}</p>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{t("features.title")}</h2>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: MessageSquare,
-                  title: t("features.chat.title"),
-                  desc: t("features.chat.desc"),
-                  accent: "bg-[hsl(224,65%,23%)]",
-                },
-                {
-                  icon: Languages,
-                  title: t("features.langs.title"),
-                  desc: t("features.langs.desc"),
-                  accent: "bg-[#FF9933]",
-                },
-                {
-                  icon: Mic,
-                  title: t("features.voice.title"),
-                  desc: t("features.voice.desc"),
-                  accent: "bg-[hsl(145,63%,28%)]",
-                },
-                {
-                  icon: TrendingUp,
-                  title: t("features.guidance.title"),
-                  desc: t("features.guidance.desc"),
-                  accent: "bg-purple-600",
-                },
-                {
-                  icon: Users,
-                  title: t("features.impact.title"),
-                  desc: t("features.impact.desc"),
-                  accent: "bg-[#FF9933]",
-                },
-                {
-                  icon: ShieldAlert,
-                  title: t("features.fraud.title"),
-                  desc: t("features.fraud.desc"),
-                  accent: "bg-red-600",
-                },
-              ].map((feature) => (
-                <div key={feature.title} className="p-6 rounded-2xl border bg-card shadow-sm hover:shadow-md transition-all group card-glow">
-                  <div className={`w-12 h-12 ${feature.accent} rounded-xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform`}>
-                    <feature.icon className="w-6 h-6 text-white" />
+            
+            <div className="space-y-8">
+              {/* Row 1: Chat, Languages, Voice */}
+              <div className="grid md:grid-cols-3 gap-8">
+                {[
+                  {
+                    icon: MessageSquare,
+                    title: t("features.chat.title"),
+                    desc: t("features.chat.desc"),
+                    accent: "bg-[hsl(224,65%,23%)]",
+                  },
+                  {
+                    icon: Languages,
+                    title: t("features.langs.title"),
+                    desc: t("features.langs.desc"),
+                    accent: "bg-[#FF9933]",
+                  },
+                  {
+                    icon: Mic,
+                    title: t("features.voice.title"),
+                    desc: t("features.voice.desc"),
+                    accent: "bg-[hsl(145,63%,28%)]",
+                  },
+                ].map((feature) => (
+                  <div key={feature.title} className="p-6 rounded-2xl border bg-card shadow-sm hover:shadow-md transition-all group card-glow flex flex-col h-full">
+                    <div className={`w-12 h-12 ${feature.accent} rounded-xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform`}>
+                      <feature.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 text-foreground">{feature.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed flex-1">{feature.desc}</p>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 text-foreground">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* Row 2: Personalized Impact, Fraud Alerts */}
+              <div className="flex flex-col md:flex-row justify-center gap-8 max-w-5xl mx-auto">
+                {[
+                  {
+                    icon: Users,
+                    title: t("features.impact.title"),
+                    desc: t("features.impact.desc"),
+                    accent: "bg-[#FF9933]",
+                  },
+                  {
+                    icon: ShieldAlert,
+                    title: t("features.fraud.title"),
+                    desc: t("features.fraud.desc"),
+                    accent: "bg-red-600",
+                  },
+                ].map((feature) => (
+                  <div key={feature.title} className="w-full md:w-[calc(50%-1rem)] p-6 rounded-2xl border bg-card shadow-sm hover:shadow-md transition-all group card-glow flex flex-col h-full">
+                    <div className={`w-12 h-12 ${feature.accent} rounded-xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform`}>
+                      <feature.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 text-foreground">{feature.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed flex-1">{feature.desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -384,7 +386,7 @@ export default function Home() {
             <div className="text-center mb-14">
               <p className="text-sm font-semibold tracking-widest uppercase text-[#FF9933] mb-3">{t("works.subtitle")}</p>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t("works.title")}</h2>
-              <p className="text-white/60 max-w-xl mx-auto">{t("works.desc")}</p>
+              <p className={`text-white/60 max-w-xl mx-auto ${language === 'gujarati' ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'}`}>{t("works.desc")}</p>
             </div>
 
             <div className="grid md:grid-cols-4 gap-6">

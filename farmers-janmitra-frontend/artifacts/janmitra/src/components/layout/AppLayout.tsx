@@ -6,6 +6,7 @@ import { Link, useLocation } from "wouter";
 import { useUserPreferences } from "@/lib/store";
 import { getTranslation } from "@/lib/translations";
 import { speakText, cancelSpeech } from "@/lib/speech";
+import { toast } from "@/hooks/use-toast";
 
 function getPageTextToRead(lang: string): string {
   const texts: string[] = [];
@@ -102,7 +103,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           text,
           language,
           () => setIsReadingPage(false),
-          () => setIsReadingPage(false)
+          () => {
+            setIsReadingPage(false);
+            if (language === "odia" || language === "assamese") {
+              toast({
+                title: "Speech Reading Unsupported",
+                description: `Text-to-speech voice reading is not supported for ${language.toUpperCase()} in this browser. Please use a browser like Microsoft Edge which has native ${language.toUpperCase()} voices, or ensure the Sarvam API has active credits.`,
+                variant: "destructive"
+              });
+            } else {
+              toast({
+                title: "Speech Reading Failed",
+                description: "Failed to play audio reading for this page. Please try again or switch language.",
+                variant: "destructive"
+              });
+            }
+          }
         );
       }
     }
@@ -134,17 +150,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <span className="text-white/30 text-xs hidden sm:block ml-1">— {t("subTitle")}</span>
           </div>
           <div className="flex items-center gap-2.5">
-            <button
-              onClick={handleToggleReadPage}
-              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all focus:outline-none ${
-                isReadingPage
-                  ? "bg-[#FF9933] text-white border-[#FF9933] animate-pulse"
-                  : "text-white/70 hover:text-white hover:bg-white/10 border-white/15"
-              }`}
-            >
-              {isReadingPage ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-              {isReadingPage ? t("nav.stopReading") : t("nav.readPage")}
-            </button>
+            {(location === "/" || location === "/frauds") && (
+              <button
+                onClick={handleToggleReadPage}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all focus:outline-none ${
+                  isReadingPage
+                    ? "bg-[#FF9933] text-white border-[#FF9933] animate-pulse"
+                    : "text-white/70 hover:text-white hover:bg-white/10 border-white/15"
+                }`}
+              >
+                {isReadingPage ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                {isReadingPage ? t("nav.stopReading") : t("nav.readPage")}
+              </button>
+            )}
             <button 
               onClick={handleExit}
               className="flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-all px-3 py-1.5 rounded-lg border border-white/15 focus:outline-none"

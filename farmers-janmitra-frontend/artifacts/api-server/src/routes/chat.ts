@@ -135,4 +135,139 @@ router.patch("/chat/sessions/:sessionId", async (req, res): Promise<void> => {
   res.json({ ...updated, createdAt: updated.createdAt.toISOString() });
 });
 
+/* ── POST /chat/tts ── */
+router.post("/chat/tts", async (req, res): Promise<void> => {
+  const { text, language } = req.body;
+  if (!text || !language) {
+    res.status(400).json({ error: "text and language required" });
+    return;
+  }
+
+  // ── AI4Bharat Indic Parler-TTS for Odia & Assamese ────────────────────────
+  // Google Translate TTS and Sarvam don't support these languages properly,
+  // so we proxy through the free AI4Bharat Gradio Space on Hugging Face.
+  if (language === "or-IN" || language === "as-IN") {
+    const GRADIO_BASE = "https://ai4bharat-indic-parler-tts.hf.space/gradio_api";
+    const description =
+      "A female speaker delivers the text clearly and naturally in a calm, moderate-pitched voice. The recording is very high quality with no background noise.";
+
+    try {
+      // 1. Kick off inference via Gradio's queue API
+      const startRes = await fetch(`${GRADIO_BASE}/call/generate_finetuned`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: [text, description] }),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (!startRes.ok) {
+        const errText = await startRes.text().catch(() => "");
+        throw new Error(`Gradio start failed ${startRes.status}: ${errText.slice(0, 200)}`);
+      }
+
+      const { event_id } = (await startRes.json()) as { event_id: string };
+
+      // 2. Read SSE stream until "complete" event arrives
+      const pollRes = await fetch(`${GRADIO_BASE}/call/generate_finetuned/${event_id}`, {
+        signal: AbortSignal.timeout(90000),
+      });
+
+      if (!pollRes.ok) {
+        throw new Error(`Gradio poll failed ${pollRes.status}`);
+      }
+
+      const reader = (pollRes.body as any).getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      let done = false;
+      while (!done) {
+        const { value, done: d } = await reader.read();
+        done = d;
+        if (value) accumulated += decoder.decode(value, { stream: !done });
+      }
+
+      // 3. Parse audio file path from "complete" SSE event data
+      let audioUrl: string | null = null;
+      const lines = accumulated.split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim() === "event: complete") {
+          const dataLine = lines[i + 1] || "";
+          if (dataLine.startsWith("data: ")) {
+            try {
+              const payload = JSON.parse(dataLine.slice(6)) as Array<{ path?: string }>;
+              if (payload?.[0]?.path) {
+                // Build file download URL (use /gradio_api/file= path, not the doubled URL)
+                audioUrl = `${GRADIO_BASE}/file=${payload[0].path}`;
+              }
+            } catch { /* ignore parse errors */ }
+          }
+          break;
+        }
+      }
+
+      if (!audioUrl) {
+        throw new Error("No audio path found in Gradio SSE response");
+      }
+
+      // 4. Fetch the audio bytes and stream back to the client
+      const audioRes = await fetch(audioUrl, { signal: AbortSignal.timeout(30000) });
+      if (!audioRes.ok) {
+        throw new Error(`Audio fetch failed ${audioRes.status} from Gradio file endpoint`);
+      }
+
+      const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
+      const contentType = audioRes.headers.get("content-type") || "audio/wav";
+      res.setHeader("Content-Type", contentType);
+      res.send(audioBuffer);
+      return;
+    } catch (error: any) {
+      console.error("Indic Parler-TTS (AI4Bharat) failed:", error.message);
+      res.status(500).json({ error: error.message });
+      return;
+    }
+  }
+
+  // ── Sarvam TTS for all other supported Indic languages ────────────────────
+  const apiKey = process.env.SARVAM_API_KEY || "sk_yh1cdbkz_wjfRt5JQspmTKGjWmt182P77";
+  try {
+    const bodyPayload: Record<string, any> = {
+      inputs: [text],
+      target_language_code: language,
+      speaker: "anushka",
+      pace: 1.0,
+      speech_sample_rate: 8000,
+      enable_preprocessing: true,
+      model: "bulbul:v2",
+      pitch: 0,
+      loudness: 1.5,
+    };
+
+    const sarvamRes = await fetch("https://api.sarvam.ai/text-to-speech", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-subscription-key": apiKey,
+      },
+      body: JSON.stringify(bodyPayload),
+    });
+
+    if (!sarvamRes.ok) {
+      const errBody = await sarvamRes.text();
+      throw new Error(`Sarvam TTS API returned ${sarvamRes.status}: ${errBody}`);
+    }
+
+    const data = (await sarvamRes.json()) as { audios?: string[] };
+    if (!data.audios || data.audios.length === 0) {
+      throw new Error("No audio returned from Sarvam TTS");
+    }
+
+    const buffer = Buffer.from(data.audios[0], "base64");
+    res.setHeader("Content-Type", "audio/wav");
+    res.send(buffer);
+  } catch (error: any) {
+    console.error("Sarvam TTS failed:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
