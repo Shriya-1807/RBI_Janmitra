@@ -52,7 +52,7 @@ class HFInferenceEmbeddings:
         self.api_key = api_key
 
     def embed_query(self, text: str) -> list[float]:
-        api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self.model_name}"
+        api_url = f"https://api-inference.huggingface.co/models/{self.model_name}"
         headers = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
@@ -65,7 +65,7 @@ class HFInferenceEmbeddings:
         return res
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self.model_name}"
+        api_url = f"https://api-inference.huggingface.co/models/{self.model_name}"
         headers = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
