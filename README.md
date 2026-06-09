@@ -178,3 +178,5 @@ Open [http://localhost:3000](http://localhost:3000) in your web browser to acces
 ## 🛡 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+
+<!-- Trigger Vercel Build -->
