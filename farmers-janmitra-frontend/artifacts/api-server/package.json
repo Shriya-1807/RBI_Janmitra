@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "set NODE_ENV=development && pnpm run build && node --enable-source-maps --env-file=.env ./dist/index.mjs",
     "build": "node ./build.mjs",
-    "start": "node --enable-source-maps ./dist/index.mjs",
+    "start": "npx prisma db push --schema=./prisma/schema.prisma && node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
