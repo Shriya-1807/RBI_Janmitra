@@ -42,6 +42,8 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 GROQ_BASE_URL = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
 
+HF_TOKEN = os.getenv("HF_TOKEN", "")
+
 USER_TYPE_CONTEXT: dict[str, str] = {
     "farmer": "The user is a farmer. Focus on Kisan Credit Card, crop loans, agri insurance, rural banking, and priority sector lending.",
     "student": "The user is a student. Focus on education loans, student banking, and financial literacy relevant to rural youth.",

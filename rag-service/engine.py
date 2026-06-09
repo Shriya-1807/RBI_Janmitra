@@ -42,7 +42,36 @@ from config import (
     GROQ_API_KEY,
     GROQ_MODEL,
     GROQ_BASE_URL,
+    HF_TOKEN,
 )
+import requests
+
+class HFInferenceEmbeddings:
+    def __init__(self, model_name: str, api_key: str = None):
+        self.model_name = model_name
+        self.api_key = api_key
+
+    def embed_query(self, text: str) -> list[float]:
+        api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self.model_name}"
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        response = requests.post(api_url, headers=headers, json={"inputs": text})
+        response.raise_for_status()
+        res = response.json()
+        if isinstance(res, list) and len(res) > 0 and isinstance(res[0], list):
+            # Sometimes HF returns a 2D list for a single string input
+            return res[0]
+        return res
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self.model_name}"
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        response = requests.post(api_url, headers=headers, json={"inputs": texts})
+        response.raise_for_status()
+        return response.json()
 
 logger = logging.getLogger(__name__)
 
@@ -105,10 +134,9 @@ class RagEngine:
 
         chromadb.api.ClientAPI.clear_system_cache()
 
-        self._embedder = HuggingFaceEmbeddings(
+        self._embedder = HFInferenceEmbeddings(
             model_name=EMBED_MODEL,
-            model_kwargs={"device": self._device},
-            encode_kwargs={"normalize_embeddings": True},
+            api_key=HF_TOKEN,
         )
 
         client = chromadb.PersistentClient(
