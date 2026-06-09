@@ -45,33 +45,47 @@ from config import (
     HF_TOKEN,
 )
 import requests
+import urllib.request
+import urllib.error
+import json
 
 class HFInferenceEmbeddings:
     def __init__(self, model_name: str, api_key: str = None):
         self.model_name = model_name
         self.api_key = api_key
 
-    def embed_query(self, text: str) -> list[float]:
-        api_url = f"https://api-inference.huggingface.co/models/{self.model_name}"
-        headers = {}
+    def _call_api(self, payload: dict) -> Any:
+        url = f"https://api-inference.huggingface.co/models/{self.model_name}"
+        headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        response = requests.post(api_url, headers=headers, json={"inputs": text})
-        response.raise_for_status()
-        res = response.json()
+        
+        req = urllib.request.Request(
+            url, 
+            data=json.dumps(payload).encode("utf-8"), 
+            headers=headers,
+            method="POST"
+        )
+        
+        # Retry up to 3 times with fresh connections to bypass temporary DNS timeouts
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(req, timeout=15) as response:
+                    return json.loads(response.read().decode("utf-8"))
+            except Exception as e:
+                if attempt == 2:
+                    raise e
+                time.sleep(1.5)
+
+    def embed_query(self, text: str) -> list[float]:
+        res = self._call_api({"inputs": text})
         if isinstance(res, list) and len(res) > 0 and isinstance(res[0], list):
             # Sometimes HF returns a 2D list for a single string input
             return res[0]
         return res
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        api_url = f"https://api-inference.huggingface.co/models/{self.model_name}"
-        headers = {}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-        response = requests.post(api_url, headers=headers, json={"inputs": texts})
-        response.raise_for_status()
-        return response.json()
+        return self._call_api({"inputs": texts})
 
 logger = logging.getLogger(__name__)
 
