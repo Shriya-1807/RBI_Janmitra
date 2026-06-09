@@ -278,7 +278,8 @@ function playSarvamChunks(
     };
 
     try {
-      const res = await fetch("/api/chat/tts", {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/chat/tts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: chunk, language: sarvamLang }),

@@ -9,6 +9,9 @@ import Chatbot from "@/pages/Chatbot";
 import Settings from "@/pages/Settings";
 import FraudPage from "@/pages/FraudPage";
 import AppLayout from "@/components/layout/AppLayout";
+import { setBaseUrl } from "@workspace/api-client-react";
+
+setBaseUrl(import.meta.env.VITE_API_URL || null);
 
 const queryClient = new QueryClient();
 
