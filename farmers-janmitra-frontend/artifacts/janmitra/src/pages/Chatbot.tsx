@@ -407,7 +407,7 @@ export default function Chatbot() {
 
             <div className={`flex flex-col gap-2 max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
               {/* Bubble */}
-              <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+              <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${
                 msg.role === "user"
                   ? "bg-[hsl(224,65%,23%)] text-white rounded-br-none"
                   : "bg-card border text-foreground rounded-bl-none"

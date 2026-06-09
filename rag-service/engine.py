@@ -52,7 +52,7 @@ CRITICAL OPERATIONAL RULES:
 2. Provide explicit reference citations using inline markers stating [Source: <filename>].
 3. If the context does not hold explicit answers, state clearly: "I couldn't find this in the available documents. Please check directly with your bank or the RBI website."
 4. Be accurate with data: preserve explicit percentages, timelines, and multi-tier transaction cap limits.
-5. Format your output cleanly in broken down, actionable bullet-points. Do not assume or guess."""
+5. Format your output cleanly. Start each list item on a new line, ensuring they are separated by actual newlines. For list items, do NOT use asterisks (*) or raw markdown formatting. Begin each list item line with a clean dash (-) or a unicode bullet (•), and do not use bold markdown tags on text headers if it clutters the output. Ensure every point is on a separate line. """
 
 _engine: "RagEngine | None" = None
 
@@ -218,6 +218,7 @@ class RagEngine:
             except Exception as e:
                 resp_text = res.text if 'res' in locals() else ''
                 logger.error("Groq API call failed: %s - Response: %s", e, resp_text)
+                raise RuntimeError(f"Groq API call failed: {e}. Detail: {resp_text}") from e
 
         # If GROK_API_KEY is configured and this is an MSME request, route via x.ai API
         if user_type == "msme" and GROK_API_KEY:
@@ -241,9 +242,10 @@ class RagEngine:
                 return response, results
             except Exception as e:
                 logger.error("Grok API call failed: %s", e)
+                raise RuntimeError(f"Grok API call failed: {e}") from e
 
         if not self._gemini:
-            raise EnvironmentError("Gemini client is not initialized because GEMINI_API_KEY is missing, and no other active API key successfully answered.")
+            raise EnvironmentError("No active LLM API provider responded. Ensure your API keys (e.g. GROQ_API_KEY) are valid and that the provider services are online.")
 
         response = (
             self._gemini.models.generate_content(model=GEMINI_MODEL, contents=prompt)
