@@ -12,8 +12,14 @@ By combining a **high-precision Hybrid RAG pipeline** with **multilingual proces
 
 ## 📸 Application Preview
 
-*(Add your application mockup or dashboard screenshot here)*
-![RBI JanMitra Interface](ADD_YOUR_IMAGE_PATH_HERE)
+<img src="assets/homepage.png" alt="JanMitra Landing Page" width="100%"/>
+
+<br/>
+
+<div align="center">
+  <img src="assets/chatbot_english.png" alt="English RAG Chatbot" width="49%" />
+  <img src="assets/chatbot_hindi.png" alt="Hindi RAG Chatbot" width="49%" />
+</div>
 
 ---
 
