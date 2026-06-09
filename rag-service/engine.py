@@ -53,12 +53,62 @@ class HFInferenceEmbeddings:
     def __init__(self, model_name: str, api_key: str = None):
         self.model_name = model_name
         self.api_key = api_key
+        self._cached_ip = None
+
+    def _resolve_ip(self) -> str | None:
+        if self._cached_ip:
+            return self._cached_ip
+            
+        hostname = "api-inference.huggingface.co"
+        # Try Cloudflare DoH by raw IP
+        try:
+            url = f"https://1.1.1.1/dns-query?name={hostname}&type=A"
+            req = urllib.request.Request(url, headers={"Accept": "application/dns-json"})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode("utf-8"))
+                for answer in data.get("Answer", []):
+                    if answer.get("type") == 1: # A record
+                        self._cached_ip = answer.get("data")
+                        logger.info("DNS-over-HTTPS resolved %s to %s", hostname, self._cached_ip)
+                        return self._cached_ip
+        except Exception as e:
+            logger.warning("Cloudflare DoH lookup failed: %s", e)
+
+        # Try Google DoH by raw IP
+        try:
+            url = f"https://8.8.8.8/resolve?name={hostname}&type=A"
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode("utf-8"))
+                for answer in data.get("Answer", []):
+                    if answer.get("type") == 1: # A record
+                        self._cached_ip = answer.get("data")
+                        logger.info("Google DoH resolved %s to %s", hostname, self._cached_ip)
+                        return self._cached_ip
+        except Exception as e:
+            logger.warning("Google DoH lookup failed: %s", e)
+
+        return None
 
     def _call_api(self, payload: dict) -> Any:
-        url = f"https://api-inference.huggingface.co/models/{self.model_name}"
-        headers = {"Content-Type": "application/json"}
+        hostname = "api-inference.huggingface.co"
+        ip = self._resolve_ip()
+        
+        # If we got the IP, use it in the URL to bypass container DNS.
+        # Otherwise, fall back to the hostname and hope local DNS works.
+        target_host = ip if ip else hostname
+        url = f"https://{target_host}/models/{self.model_name}"
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Host": hostname  # Crucial: pass Host header so Cloudflare routes correctly
+        }
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
+        
+        import ssl
+        # Create unverified context in case we connect to raw IP and SSL hostname check fails
+        ctx = ssl._create_unverified_context()
         
         req = urllib.request.Request(
             url, 
@@ -67,10 +117,9 @@ class HFInferenceEmbeddings:
             method="POST"
         )
         
-        # Retry up to 3 times with fresh connections to bypass temporary DNS timeouts
         for attempt in range(3):
             try:
-                with urllib.request.urlopen(req, timeout=15) as response:
+                with urllib.request.urlopen(req, timeout=15, context=ctx) as response:
                     return json.loads(response.read().decode("utf-8"))
             except Exception as e:
                 if attempt == 2:
