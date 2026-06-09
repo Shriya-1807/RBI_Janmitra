@@ -13,7 +13,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from config import CHROMA_PATH, BM25_PATH, GEMINI_API_KEY
+from config import CHROMA_PATH, BM25_PATH, GEMINI_API_KEY, CHROMA_MSME_PATH, BM25_MSME_PATH
 from engine import get_engine, is_ready
 
 logging.basicConfig(level=logging.INFO)
@@ -43,21 +43,23 @@ class HealthResponse(BaseModel):
     chroma_path: str
     bm25_present: bool
     gemini_configured: bool
+    msme_ready: bool = False
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if is_ready():
+    if is_ready("general"):
         try:
-            get_engine()
-            logger.info("RAG engine warmed up successfully.")
+            get_engine("general")
+            logger.info("Farmers RAG engine warmed up successfully.")
         except Exception as e:
-            logger.warning("RAG engine warmup failed (will retry on first query): %s", e)
-    else:
-        logger.warning(
-            "RAG not fully configured. Place DB at %s and set GEMINI_API_KEY.",
-            CHROMA_PATH,
-        )
+            logger.warning("Farmers RAG engine warmup failed: %s", e)
+    if is_ready("msme"):
+        try:
+            get_engine("msme")
+            logger.info("MSME RAG engine warmed up successfully.")
+        except Exception as e:
+            logger.warning("MSME RAG engine warmup failed: %s", e)
     yield
 
 
@@ -76,27 +78,28 @@ app.add_middleware(
 def health() -> HealthResponse:
     return HealthResponse(
         status="ok",
-        ready=is_ready(),
+        ready=is_ready("general"),
         chroma_path=str(CHROMA_PATH),
         bm25_present=BM25_PATH.is_file(),
         gemini_configured=bool(GEMINI_API_KEY),
+        msme_ready=is_ready("msme"),
     )
 
 
 @app.post("/api/rag_query", response_model=RagQueryResponse)
 def rag_query(body: RagQueryRequest) -> RagQueryResponse:
-    if not is_ready():
+    if not is_ready(body.user_type):
         raise HTTPException(
             status_code=503,
             detail={
-                "error": "RAG service not configured",
-                "chroma_path": str(CHROMA_PATH),
-                "bm25_path": str(BM25_PATH),
-                "hint": "Copy rbi_chroma_db_v3 from Colab into rag-service/data/ and set GEMINI_API_KEY",
+                "error": f"RAG service for '{body.user_type}' not configured",
+                "chroma_path": str(CHROMA_MSME_PATH if body.user_type == "msme" else CHROMA_PATH),
+                "bm25_path": str(BM25_MSME_PATH if body.user_type == "msme" else BM25_PATH),
+                "hint": "Copy rbi_chroma_db_v3 or rbi_chroma_db_msme_fixed from Colab into rag-service/data/ and set GEMINI_API_KEY",
             },
         )
     try:
-        engine = get_engine()
+        engine = get_engine(body.user_type)
         answer, results = engine.ask(body.query.strip(), user_type=body.user_type)
         sources = [
             RagSource(

@@ -7,7 +7,11 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Chatbot from "@/pages/Chatbot";
 import Settings from "@/pages/Settings";
+import FraudPage from "@/pages/FraudPage";
 import AppLayout from "@/components/layout/AppLayout";
+import { setBaseUrl } from "@workspace/api-client-react";
+
+setBaseUrl(import.meta.env.VITE_API_URL || null);
 
 const queryClient = new QueryClient();
 
@@ -22,6 +26,9 @@ function Router() {
       </Route>
       <Route path="/settings">
         <AppLayout><Settings /></AppLayout>
+      </Route>
+      <Route path="/frauds">
+        <AppLayout><FraudPage /></AppLayout>
       </Route>
       <Route component={NotFound} />
     </Switch>

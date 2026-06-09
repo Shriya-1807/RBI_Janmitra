@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, MessageSquare, Settings, Landmark, LogOut } from "lucide-react";
+import { Home, MessageSquare, Settings, Landmark, LogOut, ShieldAlert } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useUserPreferences } from "@/lib/store";
 import { getTranslation } from "@/lib/translations";
@@ -18,6 +18,7 @@ import {
 const items = [
   { title: "Home", url: "/", icon: Home },
   { title: "Chatbot", url: "/chatbot", icon: MessageSquare },
+  { title: "Frauds", url: "/frauds", icon: ShieldAlert },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 

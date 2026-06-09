@@ -1,4 +1,4 @@
-const SARVAM_API_KEY = process.env.SARVAM_API_KEY || "sk_se8o8sxe_gl83yTsDbjQLw66ZSuOYvVml";
+const SARVAM_API_KEY = process.env.SARVAM_API_KEY || "sk_yh1cdbkz_wjfRt5JQspmTKGjWmt182P77";
 const SARVAM_TRANS_URL = "https://api.sarvam.ai/translate";
 
 const SARVAM_CODES: Record<string, string> = {
@@ -34,6 +34,35 @@ const NLLB_CODES: Record<string, string> = {
 };
 
 const HF_API = "https://api-inference.huggingface.co/models/facebook/nllb-200-distilled-600M";
+
+async function callGoogleTranslate(text: string, srcLang: string, tgtLang: string): Promise<string> {
+  const url = "https://translate.googleapis.com/translate_a/single?" + new URLSearchParams({
+    client: "gtx",
+    sl: srcLang,
+    tl: tgtLang,
+    dt: "t",
+    q: text,
+  }).toString();
+
+  const res = await fetch(url, {
+    method: "GET",
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Google Translate error ${res.status}`);
+  }
+
+  const data = await res.json() as any;
+  if (Array.isArray(data) && data[0] && Array.isArray(data[0])) {
+    const translated = data[0]
+      .map((part: any) => part && part[0])
+      .filter(Boolean)
+      .join("");
+    return translated.trim();
+  }
+  throw new Error("Invalid response format from Google Translate API");
+}
 
 async function callSarvamTranslate(text: string, srcLang: string, tgtLang: string): Promise<string> {
   const needsSarvamTranslateV1 = 
@@ -88,6 +117,15 @@ async function callNLLB(text: string, srcLang: string, tgtLang: string): Promise
 async function translateToEnglishHelper(text: string, fromLang: string): Promise<string> {
   if (fromLang === "english") return text;
   
+  if (fromLang === "odia" || fromLang === "assamese") {
+    try {
+      const srcCode = fromLang === "odia" ? "or" : "as";
+      return await callGoogleTranslate(text, srcCode, "en");
+    } catch (e) {
+      console.error(`Google Translate to English failed for ${fromLang}, falling back:`, e);
+    }
+  }
+
   const sarvamSrc = SARVAM_CODES[fromLang];
   if (sarvamSrc) {
     try {
@@ -148,6 +186,15 @@ export async function translateToEnglish(text: string, fromLang: string): Promis
 
 async function translateFromEnglishHelper(text: string, toLang: string): Promise<string> {
   if (toLang === "english") return text;
+
+  if (toLang === "odia" || toLang === "assamese") {
+    try {
+      const tgtCode = toLang === "odia" ? "or" : "as";
+      return await callGoogleTranslate(text, "en", tgtCode);
+    } catch (e) {
+      console.error(`Google Translate from English failed for ${toLang}, falling back:`, e);
+    }
+  }
 
   const sarvamTgt = SARVAM_CODES[toLang];
   if (sarvamTgt) {

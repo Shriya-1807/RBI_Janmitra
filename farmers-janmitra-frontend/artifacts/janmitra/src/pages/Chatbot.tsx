@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mic, Send, Loader2, Volume2, Landmark, User, WifiOff, AlertCircle, Play, Pause, Square } from "lucide-react";
+import PageIconGuide from "@/components/PageIconGuide";
 
 import { LANG_CODES, LANG_LABELS, speakText, cancelSpeech, pauseSpeech, resumeSpeech } from "@/lib/speech";
+import { toast } from "@/hooks/use-toast";
 
 const USER_TYPE_LABELS: Record<string, string> = {
   general: "General Public",
@@ -68,7 +70,24 @@ export default function Chatbot() {
       text,
       language,
       () => { setIsSpeaking(false); setSpeakingMsgId(null); setIsBotPaused(false); },
-      () => { setIsSpeaking(false); setSpeakingMsgId(null); setIsBotPaused(false); }
+      () => {
+        setIsSpeaking(false);
+        setSpeakingMsgId(null);
+        setIsBotPaused(false);
+        if (language === "odia" || language === "assamese") {
+          toast({
+            title: "Speech Reading Unsupported",
+            description: `Text-to-speech voice reading is not supported for ${language.toUpperCase()} in this browser. Please use a browser like Microsoft Edge which has native ${language.toUpperCase()} voices, or ensure the Sarvam API has active credits.`,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Speech Reading Failed",
+            description: "Failed to play audio reading. Please try again.",
+            variant: "destructive"
+          });
+        }
+      }
     );
   }, [language]);
 
@@ -116,13 +135,26 @@ export default function Chatbot() {
                 if (inputMode === "voice") {
                   setTimeout(() => {
                     startRecording();
-                  }, 500);
+                  }, 50);
                 }
               },
               () => {
                 setIsSpeaking(false);
                 setSpeakingMsgId(null);
                 setIsBotPaused(false);
+                if (language === "odia" || language === "assamese") {
+                  toast({
+                    title: "Speech Reading Unsupported",
+                    description: `Text-to-speech voice reading is not supported for ${language.toUpperCase()} in this browser. Please use a browser like Microsoft Edge which has native ${language.toUpperCase()} voices, or ensure the Sarvam API has active credits.`,
+                    variant: "destructive"
+                  });
+                } else {
+                  toast({
+                    title: "Speech Reading Failed",
+                    description: "Failed to play audio reading. Please try again.",
+                    variant: "destructive"
+                  });
+                }
               }
             );
           }
@@ -200,6 +232,8 @@ export default function Chatbot() {
       setIsRecordingPaused(true);
     } else if (isRecordingPaused) {
       startRecording(true);
+    } else {
+      startRecording(false);
     }
   };
 
@@ -226,7 +260,7 @@ export default function Chatbot() {
     if (inputMode === "voice" && !isRecording && !isSpeaking && !sendChat.isPending) {
       const timer = setTimeout(() => {
         startRecording();
-      }, 600);
+      }, 50);
       return () => clearTimeout(timer);
     }
     return;
@@ -247,7 +281,7 @@ export default function Chatbot() {
         <div className="flex items-center gap-2 bg-amber-50 border-b border-amber-200 px-5 py-2.5 text-sm text-amber-800">
           <WifiOff className="w-4 h-4 flex-shrink-0" />
           <span>
-            <strong>API server is offline.</strong> Chat history and responses won't load until the API server is running on port 8080 and the Farmers RAG service is running on port 8000.
+            <strong>API server is offline.</strong> Chat history and responses won't load until the API server and RAG service are running.
           </span>
         </div>
       )}
@@ -289,7 +323,7 @@ export default function Chatbot() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="z-50">
-              {(Object.values(ChatMessageRequestUserType) as any[]).map((tVal: any) => (
+              {["farmer", "msme"].map((tVal: any) => (
                 <SelectItem key={tVal} value={tVal} className="text-sm py-2 font-medium">
                   {t(`userTypes.${tVal}`)}
                 </SelectItem>
@@ -333,6 +367,11 @@ export default function Chatbot() {
         )}
       </div>
 
+      {/* Guide Banner */}
+      <div className="px-5 py-1 bg-background border-b border-border/40">
+        <PageIconGuide page="chatbot" />
+      </div>
+
       {/* ── Chat Messages ── */}
       <div className="flex-1 overflow-y-auto px-5 py-6 space-y-5" ref={scrollRef}>
 
@@ -368,7 +407,7 @@ export default function Chatbot() {
 
             <div className={`flex flex-col gap-2 max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
               {/* Bubble */}
-              <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+              <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${
                 msg.role === "user"
                   ? "bg-[hsl(224,65%,23%)] text-white rounded-br-none"
                   : "bg-card border text-foreground rounded-bl-none"

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChatMessageRequestLanguage, ChatMessageRequestUserType } from "@workspace/api-client-react";
 import { getTranslation } from "@/lib/translations";
 import { LANG_LABELS } from "@/lib/speech";
+import PageIconGuide from "@/components/PageIconGuide";
 
 export default function Settings() {
   const { language, userType, setLanguage, setUserType } = useUserPreferences();
@@ -14,6 +15,8 @@ export default function Settings() {
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold text-primary">{t("settings.title")}</h1>
+      
+      <PageIconGuide page="settings" />
       
       <Card>
         <CardHeader>
@@ -49,7 +52,7 @@ export default function Settings() {
         <CardContent>
           <RadioGroup value={userType} onValueChange={(v) => setUserType(v as ChatMessageRequestUserType)}>
             <div className="grid gap-4 pt-2">
-              {(Object.values(ChatMessageRequestUserType) as any[]).map((tVal: any) => (
+              {["farmer", "msme"].map((tVal: any) => (
                 <div key={tVal} className="flex items-center space-x-2">
                   <RadioGroupItem value={tVal} id={tVal} />
                   <Label htmlFor={tVal} className="text-base cursor-pointer font-medium">

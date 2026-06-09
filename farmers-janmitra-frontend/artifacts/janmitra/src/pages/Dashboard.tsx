@@ -44,7 +44,8 @@ export default function Dashboard() {
   const [interestRate, setInterestRate] = useState<number>(6.50);
 
   useEffect(() => {
-    fetch(`/api/dashboard/repo-rates?lang=${language}`)
+    const baseUrl = import.meta.env.VITE_API_URL || "";
+    fetch(`${baseUrl}/api/dashboard/repo-rates?lang=${language}`)
       .then(res => res.json())
       .then(data => {
         setRepoData(data);
@@ -56,7 +57,8 @@ export default function Dashboard() {
   }, [language]);
 
   useEffect(() => {
-    fetch("/api/dashboard/rag-stats")
+    const baseUrl = import.meta.env.VITE_API_URL || "";
+    fetch(`${baseUrl}/api/dashboard/rag-stats`)
       .then(res => res.json())
       .then(data => setRagStats(data))
       .catch(err => console.error("Failed to load RAG stats:", err));
