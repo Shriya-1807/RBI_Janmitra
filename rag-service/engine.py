@@ -197,11 +197,10 @@ class RagEngine:
 
         chromadb.api.ClientAPI.clear_system_cache()
 
-        self._embedder = HFInferenceEmbeddings(
+        self._embedder = HuggingFaceEmbeddings(
             model_name=EMBED_MODEL,
-            api_key=HF_TOKEN,
+            model_kwargs={"device": self._device}
         )
-
         client = chromadb.PersistentClient(
             path=str(chroma_path),
             settings=Settings(anonymized_telemetry=False, allow_reset=True),
