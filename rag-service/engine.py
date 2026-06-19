@@ -91,6 +91,8 @@ class HFInferenceEmbeddings:
         return None
 
     def _call_api(self, payload: dict) -> Any:
+
+        logger.info("CALLING HF API")
         hostname = "api-inference.huggingface.co"
     
         url = f"https://{hostname}/models/{self.model_name}"
@@ -119,7 +121,9 @@ class HFInferenceEmbeddings:
                 time.sleep(1.5)
 
     def embed_query(self, text: str) -> list[float]:
+        logger.info("HF EMBEDDING REQUEST")
         res = self._call_api({"inputs": text})
+        logger.info("HF EMBEDDING RESPONSE RECEIVED")
         if isinstance(res, list) and len(res) > 0 and isinstance(res[0], list):
             # Sometimes HF returns a 2D list for a single string input
             return res[0]
@@ -222,8 +226,10 @@ class RagEngine:
 
     def retrieve(self, query: str, verbose: bool = False) -> list[dict[str, Any]]:
         t0 = time.time()
+        logger.info("RETRIEVE START: %s", query)
 
         bm25_scores = self._bm25_index.get_scores(tokenise(query))
+        logger.info("BM25 OK")
         bm25_ranked = sorted(
             range(len(self._corpus_texts)), key=lambda i: -bm25_scores[i]
         )[:BM25_TOP_K]
@@ -237,6 +243,7 @@ class RagEngine:
                 dense_ranked.append(self._corpus_texts.index(dr.page_content))
             except ValueError:
                 pass
+        logger.info("VECTOR SEARCH OK")
 
         candidates = rrf([bm25_ranked, dense_ranked])[:30]
         rerank_scores = self._reranker.predict(
