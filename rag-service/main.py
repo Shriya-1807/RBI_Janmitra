@@ -111,8 +111,11 @@ def rag_query(body: RagQueryRequest) -> RagQueryResponse:
         ]
         return RagQueryResponse(answer=answer, sources=sources)
     except FileNotFoundError as e:
+        logger.exception("File error")
         raise HTTPException(status_code=503, detail=str(e)) from e
+
     except EnvironmentError as e:
+        logger.exception("Environment error")
         raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
         logger.exception("RAG query failed")
