@@ -197,9 +197,9 @@ class RagEngine:
         logger.info("EMBED_MODEL=%s", EMBED_MODEL)
         logger.info("HF_TOKEN_PRESENT=%s", bool(HF_TOKEN))
         
-        self._embedder = HFInferenceEmbeddings(
+        self._embedder = HuggingFaceEmbeddings(
             model_name=EMBED_MODEL,
-            api_key=HF_TOKEN,
+            model_kwargs={"device": "cpu"},
         )
 
         client = chromadb.PersistentClient(
