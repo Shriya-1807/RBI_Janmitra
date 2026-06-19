@@ -21,7 +21,7 @@ BM25_MSME_PATH = Path(os.getenv("BM25_MSME_INDEX_PATH", DATA_MSME_DIR / "bm25_in
 
 COLLECTION_MSME_NAME = os.getenv("CHROMA_MSME_COLLECTION", "rbi_msme_collection")
 
-EMBED_MODEL = os.getenv("EMBED_MODEL", "BAAI/bge-small-en-v1.5")
+EMBED_MODEL = os.getenv("EMBED_MODEL", "BAAI/bge-large-en-v1.5")
 RERANK_MODEL = os.getenv("RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L-12-v2")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
