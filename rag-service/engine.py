@@ -92,34 +92,26 @@ class HFInferenceEmbeddings:
 
     def _call_api(self, payload: dict) -> Any:
         hostname = "api-inference.huggingface.co"
-        ip = self._resolve_ip()
-        
-        # If we got the IP, use it in the URL to bypass container DNS.
-        # Otherwise, fall back to the hostname and hope local DNS works.
-        target_host = ip if ip else hostname
-        url = f"https://{target_host}/models/{self.model_name}"
-        
+    
+        url = f"https://{hostname}/models/{self.model_name}"
+    
         headers = {
-            "Content-Type": "application/json",
-            "Host": hostname  # Crucial: pass Host header so Cloudflare routes correctly
+            "Content-Type": "application/json"
         }
+    
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        
-        import ssl
-        # Create unverified context in case we connect to raw IP and SSL hostname check fails
-        ctx = ssl._create_unverified_context()
-        
+    
         req = urllib.request.Request(
-            url, 
-            data=json.dumps(payload).encode("utf-8"), 
+            url,
+            data=json.dumps(payload).encode("utf-8"),
             headers=headers,
             method="POST"
         )
-        
+    
         for attempt in range(3):
             try:
-                with urllib.request.urlopen(req, timeout=15, context=ctx) as response:
+                with urllib.request.urlopen(req, timeout=15) as response:
                     return json.loads(response.read().decode("utf-8"))
             except Exception as e:
                 if attempt == 2:
