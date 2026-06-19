@@ -193,6 +193,9 @@ class RagEngine:
 
         chromadb.api.ClientAPI.clear_system_cache()
 
+        logger.info("EMBED_MODEL=%s", EMBED_MODEL)
+        logger.info("HF_TOKEN_PRESENT=%s", bool(HF_TOKEN))
+        
         self._embedder = HFInferenceEmbeddings(
             model_name=EMBED_MODEL,
             api_key=HF_TOKEN,
