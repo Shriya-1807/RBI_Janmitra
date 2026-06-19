@@ -113,6 +113,7 @@ class HFInferenceEmbeddings:
     
         for attempt in range(3):
             try:
+                logger.info("HF URL = %s", url)
                 with urllib.request.urlopen(req, timeout=15) as response:
                     return json.loads(response.read().decode("utf-8"))
             except Exception as e:
